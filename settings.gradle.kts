@@ -20,4 +20,8 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "KiloAndroid"
-include(":app", ":lib")
+include(":app")
+project(":app").projectDir = file("packages/app/app")
+
+include(":lib")
+project(":lib").projectDir = file("packages/app/lib")
