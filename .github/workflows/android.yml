@@ -28,6 +28,7 @@ jobs:
           KILO_VER=$(curl -s https://api.github.com/repos/Kilo-Org/kilocode/releases/latest | jq -r .tag_name)
           curl -L "https://github.com/Kilo-Org/kilocode/releases/download/${KILO_VER}/kilo-linux-arm64.tar.gz" -o kilo.tar.gz
           tar -xzf kilo.tar.gz
+          ls -R
           mkdir -p src/features/kilo-android/assets
           cp kilo-linux-arm64/kilo src/features/kilo-android/assets/
           chmod +x src/features/kilo-android/assets/kilo
