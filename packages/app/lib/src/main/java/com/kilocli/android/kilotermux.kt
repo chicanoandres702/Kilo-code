@@ -1,43 +1,78 @@
 /*
  * [Parent Feature/Milestone] Kilo Android App
- * [Subtask] Core KiloTermux initialization and binary management
+ * [Subtask] Auto-install bundled Kilo binary before command execution
  * [Upstream] MainActivity -> [Downstream] LibTermux environment
- * [Law Check] 55 lines | Passed Do It Check
+ * [Law Check] 79 lines | Passed Do It Check
  */
 
 package com.kilocli.android
 
 import android.content.Context
+import android.os.Build
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
 
 class KiloTermux(private val context: Context) {
     private val processManager = KiloProcessManager(context)
+    private val installLock = Any()
 
     fun initialize(): Flow<InstallState> = callbackFlow {
         trySend(InstallState(progress = 0.5f, status = "Checking Kilo binary..."))
-        
-        if (!processManager.isBinaryInstalled()) {
-            trySend(InstallState(progress = 0.8f, status = "Extracting binary..."))
-            installKiloBinary()
+
+        val installError = ensureBinaryInstalled()
+        if (installError != null) {
+            trySend(InstallState(progress = 1.0f, status = installError))
+        } else {
+            trySend(InstallState(progress = 1.0f, status = "Ready", isComplete = true))
         }
-        
-        trySend(InstallState(progress = 1.0f, status = "Ready", isComplete = true))
+
         close()
     }
 
-    private fun installKiloBinary() {
-        context.assets.open("kilo").use { input ->
-            val binary = File(context.filesDir, "kilo")
-            binary.outputStream().use { output ->
-                input.copyTo(output)
+    private fun ensureBinaryInstalled(): String? {
+        var installError: String? = null
+        synchronized(installLock) {
+            if (!processManager.isBinaryInstalled()) {
+                try {
+                    installKiloBinary()
+                } catch (e: Exception) {
+                    installError = e.message ?: "Unable to install Kilo binary"
+                }
             }
-            binary.setExecutable(true)
+        }
+        return installError
+    }
+
+    private fun installKiloBinary() {
+        val assetName = resolveAssetName()
+        context.assets.open(assetName).use { input ->
+            val binary = File(context.filesDir, "kilo")
+            binary.outputStream().use { output -> input.copyTo(output) }
+            binary.setExecutable(true, false)
+
+            if (!processManager.isBinaryInstalled()) {
+                throw IOException("Installed Kilo binary is not executable: ${binary.absolutePath}")
+            }
         }
     }
 
+    private fun resolveAssetName(): String {
+        val assetNames = context.assets.list("")?.toSet().orEmpty()
+        val candidates = Build.SUPPORTED_ABIS.map { "kilo-linux-$it" } +
+            listOf("kilo-linux-arm64", "kilo-linux-x64", "kilo")
+
+        return candidates.firstOrNull { it in assetNames }
+            ?: throw FileNotFoundException("Missing Kilo binary asset. Expected one of: ${candidates.joinToString()}")
+    }
+
     fun runCommand(cmd: String, args: List<String> = emptyList()): CommandResult {
+        val installError = ensureBinaryInstalled()
+        if (installError != null) {
+            return CommandResult("", installError, 1)
+        }
         return processManager.runCommand(cmd, args)
     }
 
