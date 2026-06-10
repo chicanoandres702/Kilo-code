@@ -73,8 +73,8 @@ jobs:
           fi
           mkdir -p dist
           cp "$APK_PATH" "dist/kilo-${VERSION}-${BUILD_TYPE}.apk"
-          cp app/src/main/assets/kilo-linux-arm64 "dist/kilo-linux-arm64"
-          cp app/src/main/assets/kilo-linux-x64 "dist/kilo-linux-x64"
+          cp packages/app/app/src/main/assets/kilo-linux-arm64 "dist/kilo-linux-arm64"
+          cp packages/app/app/src/main/assets/kilo-linux-x64 "dist/kilo-linux-x64"
           echo "ARTIFACT_PATH=dist" >> $GITHUB_ENV
 
       - name: Upload Artifact
