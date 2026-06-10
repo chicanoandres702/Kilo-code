@@ -1,6 +1,6 @@
 # [Parent Feature/Milestone] Kilo Android App
 # [Subtask] GitHub Actions CI/CD workflow for Android
-# [Law Check] 45 lines
+# [Law Check] 76 lines
 
 name: android-build
 
@@ -20,24 +20,29 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
           validate-wrappers: false
 
-      - name: Download Kilo arm64 binary
+      - name: Download Kilo binaries
         run: |
-          KILO_VER=$(curl -s https://api.github.com/repos/Kilo-Org/kilocode/releases/latest | jq -r .tag_name)
-          curl -L "https://github.com/Kilo-Org/kilocode/releases/download/${KILO_VER}/kilo-linux-arm64.tar.gz" -o kilo.tar.gz
-          tar -xzf kilo.tar.gz
-          mkdir -p app/src/main/assets
-          cp kilo app/src/main/assets/
-          chmod +x app/src/main/assets/kilo
+          ASSETS_DIR=app/src/main/assets
+          mkdir -p "$ASSETS_DIR"
+          for ARCH in arm64 x64; do
+            URL=$(curl -s https://api.github.com/repos/Kilo-Org/kilocode/releases/latest | jq -r --arg name "kilo-linux-${ARCH}.tar.gz" '.assets[] | select(.name==$name) | .browser_download_url')
+            test -n "$URL" && test "$URL" != "null"
+            curl -L "$URL" -o "kilo-linux-${ARCH}.tar.gz"
+            tar -xzf "kilo-linux-${ARCH}.tar.gz"
+            cp kilo "$ASSETS_DIR/kilo-linux-${ARCH}"
+            rm -f kilo "kilo-linux-${ARCH}.tar.gz"
+          done
+          chmod +x "$ASSETS_DIR"/kilo-linux-*
 
       - name: Decode Keystore
         if: startsWith(github.ref, 'refs/tags/v')
@@ -46,7 +51,7 @@ jobs:
       - name: Build with Gradle
         run: |
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            gradle assembleRelease --no-daemon \
+            gradle lintRelease assembleRelease --no-daemon \
               -Pandroid.injected.signing.store.file=$(pwd)/app/release.keystore \
               -Pandroid.injected.signing.store.password="${{ secrets.STORE_PASSWORD }}" \
               -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
@@ -60,22 +65,20 @@ jobs:
           VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             BUILD_TYPE="release"
-            FILE_PATH="app/build/outputs/apk/release/app-release-unsigned.apk"
-            # Note: Depending on signing setup, might be app-release.apk
-            if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
-                FILE_PATH="app/build/outputs/apk/release/app-release.apk"
-            fi
-            APK_NAME="kilo-${VERSION}-release.apk"
-            cp "$FILE_PATH" "$APK_NAME"
+            APK_PATH="app/build/outputs/apk/release/app-release.apk"
+            test -f "$APK_PATH" || APK_PATH="app/build/outputs/apk/release/app-release-unsigned.apk"
           else
             BUILD_TYPE="debug"
-            APK_NAME="kilo-${VERSION}-debug.apk"
-            cp app/build/outputs/apk/debug/app-debug.apk "$APK_NAME"
+            APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
           fi
-          echo "APK_NAME=$APK_NAME" >> $GITHUB_ENV
+          mkdir -p dist
+          cp "$APK_PATH" "dist/kilo-${VERSION}-${BUILD_TYPE}.apk"
+          cp app/src/main/assets/kilo-linux-arm64 "dist/kilo-linux-arm64"
+          cp app/src/main/assets/kilo-linux-x64 "dist/kilo-linux-x64"
+          echo "ARTIFACT_PATH=dist" >> $GITHUB_ENV
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: "app-build"
-          path: ${{ env.APK_NAME }}
+          name: "kilo-android-${{ github.ref_name }}"
+          path: ${{ env.ARTIFACT_PATH }}

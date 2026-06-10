@@ -9,7 +9,6 @@ package com.kilocli.android
 
 import android.content.Context
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 class KiloProcessManager(private val context: Context) {
     private val binaryFile = File(context.filesDir, "kilo")
@@ -21,16 +20,9 @@ class KiloProcessManager(private val context: Context) {
                 .redirectErrorStream(true)
                 .start()
             
-            // For short-lived commands, use a timeout.
-            // Note: This is still blocking but now respects a timeout.
-            val finished = process.waitFor(5, TimeUnit.SECONDS)
-            if (!finished) {
-                process.destroy()
-                return CommandResult("", "Command timed out", 1)
-            }
-            
+            val exitCode = process.waitFor()
             val stdout = process.inputStream.bufferedReader().use { it.readText() }
-            CommandResult(stdout, "", process.exitValue())
+            CommandResult(stdout, "", exitCode)
         } catch (e: Exception) {
             CommandResult("", e.message ?: "Unknown error", 1)
         }
