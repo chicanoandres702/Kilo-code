@@ -28,30 +28,49 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.ui.Alignment
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KiloChatScreen(kiloTermux: KiloTermux) {
-    var messages by remember { mutableStateOf(listOf<String>()) }
+    var messages by remember { mutableStateOf(listOf<Pair<String, Boolean>>()) }
     var input by remember { mutableStateOf("") }
     var isInitialized by remember { mutableStateOf(false) }
 
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Kilo Android", style = MaterialTheme.typography.titleLarge)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Kilo Android") },
+                actions = {
+                    IconButton(onClick = { /* TODO: Settings */ }) {
+                        Icon(Icons.Default.Settings, "Settings")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             if (!isInitialized) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                Text("Initializing...")
+                Text("Initializing Termux...", modifier = Modifier.padding(8.dp))
             }
-            Spacer(modifier = Modifier.height(8.dp))
             
-            messages.forEach { msg -> Text(msg, modifier = Modifier.padding(vertical = 4.dp)) }
-            Spacer(modifier = Modifier.weight(1f))
+            LazyColumn(modifier = Modifier.weight(1f).padding(8.dp)) {
+                items(messages) { msg ->
+                    MessageBubble(text = msg.first, isUser = msg.second)
+                }
+            }
             
-            Row {
+            Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 TextField(value = input, onValueChange = { input = it }, modifier = Modifier.weight(1f))
                 Button(onClick = {
-                    messages = messages + "User: $input"
+                    messages = messages + Pair(input, true)
                     input = ""
-                }) { Text("Send") }
+                }, modifier = Modifier.padding(start = 8.dp)) { Text("Send") }
             }
         }
     }
