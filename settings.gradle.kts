@@ -1,6 +1,6 @@
 // [Parent Feature/Milestone] Kilo Android App
-# [Subtask] Gradle settings for Kilo Android
-# [Law Check] 10 lines
+// [Subtask] Root settings.gradle.kts
+// [Law Check] 20 lines
 
 pluginManagement {
     repositories {
@@ -15,7 +15,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io")
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
