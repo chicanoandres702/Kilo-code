@@ -3,7 +3,7 @@
  * [Child Task/Issue] #1
  * [Subtask] Move KiloChatScreen to separate file
  * [Upstream] MainActivity -> [Downstream] KiloChatScreen
- * [Law Check] 48 lines | Passed Do It Check
+ * [Law Check] 50 lines | Passed Do It Check
  */
 
 package com.kilocli.android
