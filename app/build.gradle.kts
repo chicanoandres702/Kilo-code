@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.kilocli.android"
+    namespace = "com.demonstratorz.kilocode"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.kilocli.android"
+        applicationId = "com.demonstratorz.kilocode"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

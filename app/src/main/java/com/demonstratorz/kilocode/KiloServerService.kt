@@ -6,7 +6,7 @@
  * [Law Check] 83 lines | Passed Do It Check
  */
 
-package com.kilocli.android
+package com.demonstratorz.kilocode
 
 import android.app.Notification
 import android.app.NotificationChannel
