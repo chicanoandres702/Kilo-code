@@ -2,7 +2,7 @@
  * [Parent Feature/Milestone] Kilo Android App
  * [Subtask] Core KiloTermux initialization and binary management
  * [Upstream] MainActivity -> [Downstream] LibTermux environment
- * [Law Check] 85 lines | Passed Do It Check
+ * [Law Check] 55 lines | Passed Do It Check
  */
 
 package com.kilocli.android
@@ -37,6 +37,16 @@ class KiloTermux(private val context: Context) {
 
     fun runCommand(cmd: String): CommandResult {
         return processManager.runCommand(cmd)
+    }
+
+    fun runServer(): Flow<String> = callbackFlow {
+        trySend("Starting server...")
+        val result = processManager.runCommand("server", listOf("start"))
+        trySend(result.stdout)
+        if (result.stderr.isNotEmpty()) {
+            trySend("Error: ${result.stderr}")
+        }
+        close()
     }
 
     companion object {

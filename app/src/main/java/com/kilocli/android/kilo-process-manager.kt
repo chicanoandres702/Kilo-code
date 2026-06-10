@@ -2,7 +2,7 @@
  * [Parent Feature/Milestone] Kilo Android App
  * [Subtask] Implement native ProcessBuilder wrapper for Kilo CLI
  * [Upstream] KiloTermux -> [Downstream] Android Process API
- * [Law Check] 70 lines | Passed Do It Check
+ * [Law Check] 34 lines | Passed Do It Check
  */
 
 package com.kilocli.android

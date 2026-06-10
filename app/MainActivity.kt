@@ -2,7 +2,7 @@
  * [Parent Feature/Milestone] Kilo Android App
  * [Subtask] MainActivity with Jetpack Compose UI
  * [Upstream] User input -> [Downstream] KiloTermux server
- * [Law Check] 75 lines | Passed Do It Check
+ * [Law Check] 76 lines | Passed Do It Check
  */
 
 package com.kilocli.android
@@ -11,8 +11,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.kilocli.android.ui.theme.KiloAndroidTheme
@@ -27,12 +32,6 @@ class MainActivity : ComponentActivity() {
         setContent { KiloAndroidTheme { KiloChatScreen(kiloTermux) } }
     }
 }
-
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.ui.Alignment
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
