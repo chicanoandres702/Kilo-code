@@ -6,9 +6,9 @@ name: android-build
 
 on:
   push:
-    branches: [ "main", "feature/kilo-android" ]
+    branches: [ "**" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "**" ]
 
 jobs:
   build:
