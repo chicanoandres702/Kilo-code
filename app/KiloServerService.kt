@@ -1,8 +1,9 @@
 /*
- * [Parent Feature/Milestone] Kilo Android App
- * [Subtask] Foreground service for Kilo server
+ * [Parent Feature/Milestone] Android Stability
+ * [Child Task/Issue] #1
+ * [Subtask] Improve service robustness and startup safety
  * [Upstream] MainActivity -> [Downstream] Termux embedded environment
- * [Law Check] 65 lines | Passed Do It Check
+ * [Law Check] 83 lines | Passed Do It Check
  */
 
 package com.kilocli.android
@@ -15,6 +16,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,22 +27,32 @@ import kotlinx.coroutines.launch
 class KiloServerService : Service() {
     private val job = Job()
     private val scope = CoroutineScope(Dispatchers.IO + job)
-    private lateinit var kiloTermux: KiloTermux
+    private var kiloTermux: KiloTermux? = null
 
     override fun onCreate() {
         super.onCreate()
-        kiloTermux = KiloTermux.create(this)
-        createNotificationChannel()
+        try {
+            kiloTermux = KiloTermux.create(this)
+            createNotificationChannel()
+        } catch (e: Exception) {
+            Log.e("KiloServerService", "Initialization failed: ${e.message}")
+            stopSelf()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (kiloTermux == null) {
+            return START_NOT_STICKY
+        }
+        
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(1, createNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         } else {
             startForeground(1, createNotification())
         }
+        
         scope.launch {
-            kiloTermux.runServer().collectLatest { line ->
+            kiloTermux?.runServer()?.collectLatest { line ->
                 // Server output handling
             }
         }
@@ -55,12 +67,14 @@ class KiloServerService : Service() {
             .build()
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            "kilo_channel",
-            "Kilo Server",
-            NotificationManager.IMPORTANCE_LOW
-        )
-        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "kilo_channel",
+                "Kilo Server",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        }
     }
 
     override fun onBind(intent: Intent) = null
