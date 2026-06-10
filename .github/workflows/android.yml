@@ -75,10 +75,12 @@ jobs:
           cp "$APK_PATH" "dist/kilo-${VERSION}-${BUILD_TYPE}.apk"
           cp packages/app/app/src/main/assets/kilo-linux-arm64 "dist/kilo-linux-arm64"
           cp packages/app/app/src/main/assets/kilo-linux-x64 "dist/kilo-linux-x64"
+          ARTIFACT_NAME=$(echo "${GITHUB_REF_NAME}" | tr '/:' '__')
           echo "ARTIFACT_PATH=dist" >> $GITHUB_ENV
+          echo "ARTIFACT_NAME=kilo-android-${ARTIFACT_NAME}" >> $GITHUB_ENV
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: "kilo-android-${{ github.ref_name }}"
+          name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.ARTIFACT_PATH }}
