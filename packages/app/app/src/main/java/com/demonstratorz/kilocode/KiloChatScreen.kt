@@ -11,6 +11,9 @@ package com.demonstratorz.kilocode
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.kilocli.android.KiloMode
 import com.kilocli.android.KiloTermux
+import com.kilocli.android.MessageBubble
 import com.kilocli.android.SettingsState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,23 +52,39 @@ fun KiloChatScreen(kiloTermux: KiloTermux, settings: SettingsState, modifier: Mo
     }
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(selected = selectedMode == KiloMode.Architect, onClick = { selectedMode = KiloMode.Architect }, label = { Text("Architect") })
-            FilterChip(selected = selectedMode == KiloMode.Coder, onClick = { selectedMode = KiloMode.Coder }, label = { Text("Coder") })
-            FilterChip(selected = selectedMode == KiloMode.Debugger, onClick = { selectedMode = KiloMode.Debugger }, label = { Text("Debugger") })
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = isAutonomous, onCheckedChange = { isAutonomous = it })
-            Text("Autonomous")
-        }
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(messages) { (message, isUser) ->
-                Text(message, color = if (isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            tonalElevation = 4.dp
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Kilo Studio", style = MaterialTheme.typography.headlineSmall)
+                Text("Modern AI workspace", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(selected = selectedMode == KiloMode.Architect, onClick = { selectedMode = KiloMode.Architect }, label = { Text("Architect") })
+                    FilterChip(selected = selectedMode == KiloMode.Coder, onClick = { selectedMode = KiloMode.Coder }, label = { Text("Coder") })
+                    FilterChip(selected = selectedMode == KiloMode.Debugger, onClick = { selectedMode = KiloMode.Debugger }, label = { Text("Debugger") })
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(checked = isAutonomous, onCheckedChange = { isAutonomous = it })
+                    Text("Autonomous", style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
+        Spacer(Modifier.height(12.dp))
+        LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(messages) { (message, isUser) -> MessageBubble(message, isUser) }
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(value = input, onValueChange = { input = it }, modifier = Modifier.weight(1f))
-            Button(onClick = { send() }, modifier = Modifier.padding(start = 8.dp)) { Text("Send") }
+            OutlinedTextField(
+                value = input,
+                onValueChange = { input = it },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(18.dp),
+                placeholder = { Text("Ask Kilo anything...") }
+            )
+            FilledIconButton(onClick = { send() }, modifier = Modifier.padding(start = 8.dp)) { Icon(Icons.Default.Send, "Send") }
         }
     }
 }

@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import com.demonstratorz.kilocode.ui.theme.KiloAndroidTheme
 import com.kilocli.android.KiloTermux
 import com.kilocli.android.SettingsState
@@ -45,7 +47,13 @@ fun MainScreen(kiloTermux: KiloTermux) {
     
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .clip(RoundedCornerShape(24.dp)),
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                tonalElevation = 8.dp
+            ) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Info, "Chat") },
                     label = { Text("Chat") },
