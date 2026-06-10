@@ -1,13 +1,12 @@
 /*
  * [Parent Feature/Milestone] Kilo Android App
  * [Subtask] Application class for Kilo Android
- * [Law Check] 20 lines
+ * [Law Check] 14 lines
  */
 
 package com.kilocli.android
 
 import android.app.Application
-import com.libtermux.LibTermux
 
 class KiloApplication : Application() {
     override fun onCreate() {
