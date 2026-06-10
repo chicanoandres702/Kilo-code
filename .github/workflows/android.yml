@@ -62,7 +62,7 @@ jobs:
 
       - name: Prepare Artifact
         run: |
-          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' packages/app/app/build.gradle.kts)
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             BUILD_TYPE="release"
             APK_PATH="app/build/outputs/apk/release/app-release.apk"
