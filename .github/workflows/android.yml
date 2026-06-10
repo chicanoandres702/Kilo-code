@@ -77,5 +77,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.APK_NAME }}
+          name: "app-build"
           path: ${{ env.APK_NAME }}
