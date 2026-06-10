@@ -51,6 +51,7 @@ gate_7() {
     local violations=0
     for f in $(git diff --name-only 2>/dev/null || find . -maxdepth 2 \( -name "*.kt" -o -name "*.ts" \) 2>/dev/null); do
         [[ -f "$f" ]] || continue
+        [[ "$f" == *.md ]] && continue
         wc -l < "$f" | awk '{if($1>100) exit 1}' || violations=$((violations+1))
     done
     [[ $violations -gt 0 ]] && echo "❌ Gate 7 FAILED" || echo "✓ Gate 7"

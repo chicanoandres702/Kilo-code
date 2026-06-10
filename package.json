@@ -1,0 +1,10 @@
+{
+  "name": "kilo-project-root",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "turbo": "latest"
+  }
+}

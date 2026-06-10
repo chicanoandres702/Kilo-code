@@ -20,4 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "KiloAndroid"
-include(":app")
+include(":app", ":lib")
