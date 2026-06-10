@@ -7,7 +7,9 @@
 
 package com.kilocli.android
 
+import android.os.Build
 import android.os.Bundle
+import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -28,6 +30,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         kiloTermux = KiloTermux.create(this)
+        
+        // Explicitly start the service
+        val serviceIntent = Intent(this, KiloServerService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
         
         setContent { KiloAndroidTheme { KiloChatScreen(kiloTermux) } }
     }

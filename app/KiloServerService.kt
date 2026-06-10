@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 class KiloServerService : Service() {
     private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.Main + job)
+    private val scope = CoroutineScope(Dispatchers.IO + job)
     private lateinit var kiloTermux: KiloTermux
 
     override fun onCreate() {
