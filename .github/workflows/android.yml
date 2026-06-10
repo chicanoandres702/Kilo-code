@@ -6,9 +6,10 @@ name: android-build
 
 on:
   push:
-    branches: [ "main", "feature/kilo-android" ]
+    branches: [ "**" ]
+    tags: [ "v*" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "**" ]
 
 jobs:
   build:
@@ -37,12 +38,44 @@ jobs:
           mkdir -p app/src/main/assets
           cp kilo app/src/main/assets/
           chmod +x app/src/main/assets/kilo
-      
+
+      - name: Decode Keystore
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
+
       - name: Build with Gradle
-        run: gradle assembleDebug --no-daemon
-      
-      - name: Upload APK artifact
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            gradle assembleRelease --no-daemon \
+              -Pandroid.injected.signing.store.file=$(pwd)/app/release.keystore \
+              -Pandroid.injected.signing.store.password="${{ secrets.STORE_PASSWORD }}" \
+              -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
+              -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}"
+          else
+            gradle assembleDebug --no-daemon
+          fi
+
+      - name: Prepare Artifact
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            BUILD_TYPE="release"
+            FILE_PATH="app/build/outputs/apk/release/app-release-unsigned.apk"
+            # Note: Depending on signing setup, might be app-release.apk
+            if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
+                FILE_PATH="app/build/outputs/apk/release/app-release.apk"
+            fi
+            APK_NAME="kilo-${VERSION}-release.apk"
+            cp "$FILE_PATH" "$APK_NAME"
+          else
+            BUILD_TYPE="debug"
+            APK_NAME="kilo-${VERSION}-debug.apk"
+            cp app/build/outputs/apk/debug/app-debug.apk "$APK_NAME"
+          fi
+          echo "APK_NAME=$APK_NAME" >> $GITHUB_ENV
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: kilo-android-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: "app-build"
+          path: ${{ env.APK_NAME }}
