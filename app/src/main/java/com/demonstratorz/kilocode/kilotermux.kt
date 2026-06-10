@@ -31,7 +31,9 @@ class KiloTermux(private val context: Context) {
         try {
             context.assets.open("kilo").use { input ->
                 val binary = File(context.filesDir, "kilo")
-                binary.writeBytes(input.readBytes())
+                binary.outputStream().use { output ->
+                    input.copyTo(output)
+                }
                 binary.setExecutable(true)
             }
         } catch (e: Exception) {
