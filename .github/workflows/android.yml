@@ -52,7 +52,7 @@ jobs:
               -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
               -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}"
           else
-            gradle assembleDebug --no-daemon
+            gradle lintDebug assembleDebug --no-daemon
           fi
 
       - name: Prepare Artifact

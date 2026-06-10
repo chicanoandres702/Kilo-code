@@ -37,8 +37,8 @@ class KiloTermux(private val context: Context) {
         }
     }
 
-    fun runCommand(cmd: String): CommandResult {
-        return processManager.runCommand(cmd)
+    fun runCommand(cmd: String, args: List<String> = emptyList()): CommandResult {
+        return processManager.runCommand(cmd, args)
     }
 
     fun runServer(): Flow<String> = callbackFlow {
