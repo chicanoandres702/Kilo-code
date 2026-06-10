@@ -1,0 +1,43 @@
+# [Parent Feature/Milestone] Kilo Android App
+# [Subtask] GitHub Actions CI/CD workflow for Android
+# [Law Check] 45 lines
+
+name: android-build
+
+on:
+  push:
+    branches: [ "main", "feature/kilo-android" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      
+      - name: Download Kilo arm64 binary
+        run: |
+          KILO_VER=$(curl -s https://api.github.com/repos/Kilo-Org/kilocode/releases/latest | jq -r .tag_name)
+          curl -L "https://github.com/Kilo-Org/kilocode/releases/download/${KILO_VER}/kilo-linux-arm64.tar.gz" -o kilo.tar.gz
+          tar -xzf kilo.tar.gz
+          mkdir -p src/features/kilo-android/assets
+          cp kilo-linux-arm64/kilo src/features/kilo-android/assets/
+          chmod +x src/features/kilo-android/assets/kilo
+      
+      - name: Build with Gradle
+        working-directory: src/features/kilo-android
+        run: ./gradlew assembleDebug --no-daemon
+      
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kilo-android-debug
+          path: src/features/kilo-android/app/build/outputs/apk/debug/app-debug.apk
