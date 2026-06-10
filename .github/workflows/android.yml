@@ -32,7 +32,7 @@ jobs:
 
       - name: Download Kilo binaries
         run: |
-          ASSETS_DIR=app/src/main/assets
+          ASSETS_DIR=packages/app/app/src/main/assets
           mkdir -p "$ASSETS_DIR"
           for ARCH in arm64 x64; do
             URL=$(curl -s https://api.github.com/repos/Kilo-Org/kilocode/releases/latest | jq -r --arg name "kilo-linux-${ARCH}.tar.gz" '.assets[] | select(.name==$name) | .browser_download_url')
@@ -65,11 +65,11 @@ jobs:
           VERSION=$(grep -oP 'versionName = "\K[^"]+' packages/app/app/build.gradle.kts)
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             BUILD_TYPE="release"
-            APK_PATH="app/build/outputs/apk/release/app-release.apk"
-            test -f "$APK_PATH" || APK_PATH="app/build/outputs/apk/release/app-release-unsigned.apk"
+            APK_PATH="packages/app/app/build/outputs/apk/release/app-release.apk"
+            test -f "$APK_PATH" || APK_PATH="packages/app/app/build/outputs/apk/release/app-release-unsigned.apk"
           else
             BUILD_TYPE="debug"
-            APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+            APK_PATH="packages/app/app/build/outputs/apk/debug/app-debug.apk"
           fi
           mkdir -p dist
           cp "$APK_PATH" "dist/kilo-${VERSION}-${BUILD_TYPE}.apk"
