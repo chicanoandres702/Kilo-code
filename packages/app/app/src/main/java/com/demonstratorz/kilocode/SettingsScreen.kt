@@ -53,7 +53,7 @@ fun SettingsScreen(settingsState: SettingsState, modifier: Modifier = Modifier) 
 @Composable
 private fun SettingNodeRow(
     node: SettingNode,
-    expanded: MutableStateMap<String, Boolean>,
+    expanded: MutableMap<String, Boolean>,
     onToggle: (String, Boolean) -> Unit
 ) {
     val isExpanded = expanded[node.title] ?: false
