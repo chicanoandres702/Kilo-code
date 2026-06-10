@@ -28,10 +28,14 @@ class KiloTermux(private val context: Context) {
     }
 
     private fun installKiloBinary() {
-        context.assets.open("kilo").use { input ->
-            val binary = File(context.filesDir, "kilo")
-            binary.writeBytes(input.readBytes())
-            binary.setExecutable(true)
+        try {
+            context.assets.open("kilo").use { input ->
+                val binary = File(context.filesDir, "kilo")
+                binary.writeBytes(input.readBytes())
+                binary.setExecutable(true)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("KiloTermux", "Failed to install binary: ${e.message}")
         }
     }
 

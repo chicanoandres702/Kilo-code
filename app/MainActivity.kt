@@ -40,6 +40,14 @@ fun KiloChatScreen(kiloTermux: KiloTermux) {
     var input by remember { mutableStateOf("") }
     var isInitialized by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        kiloTermux.initialize().collect { state ->
+            if (state.isComplete) {
+                isInitialized = true
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
