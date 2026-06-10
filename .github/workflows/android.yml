@@ -23,6 +23,11 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
       
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
       - name: Download Kilo arm64 binary
         run: |
           KILO_VER=$(curl -s https://api.github.com/repos/Kilo-Org/kilocode/releases/latest | jq -r .tag_name)
@@ -33,7 +38,7 @@ jobs:
           chmod +x app/src/main/assets/kilo
       
       - name: Build with Gradle
-        run: ./gradlew assembleDebug --no-daemon
+        run: gradle assembleDebug --no-daemon
       
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
