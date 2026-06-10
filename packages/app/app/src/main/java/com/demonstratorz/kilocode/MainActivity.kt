@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import com.demonstratorz.kilocode.ui.theme.KiloAndroidTheme
 import com.kilocli.android.KiloTermux
 import com.kilocli.android.SettingsState
+import com.demonstratorz.kilocode.KiloChatScreen
+import com.demonstratorz.kilocode.FileExplorer
 
 class MainActivity : ComponentActivity() {
     private lateinit var kiloTermux: KiloTermux
@@ -45,7 +47,7 @@ fun MainScreen(kiloTermux: KiloTermux) {
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Chat, "Chat") },
+                    icon = { Icon(Icons.Default.Info, "Chat") },
                     label = { Text("Chat") },
                     selected = currentScreen == 0,
                     onClick = { currentScreen = 0 }
