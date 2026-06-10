@@ -3,49 +3,51 @@
 // [Law Check] 35 lines
 
 buildscript {
-    ext.kotlin_version = "1.9.22"
+    val kotlin_version = "1.9.22"
     dependencies {
-        classpath "com.android.tools.build:gradle:8.2.2"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath("com.android.tools.build:gradle:8.2.2")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
     }
 }
 
 plugins {
-    id "com.android.application"
-    id "org.jetbrains.kotlin.android"
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
 }
 
 android {
-    namespace "com.kilocli.android"
-    compileSdk 34
+    namespace = "com.kilocli.android"
+    compileSdk = 34
 
     defaultConfig {
-        applicationId "com.kilocli.android"
-        minSdk 24
-        targetSdk 34
-        versionCode 1
-        versionName "1.0"
-        ndk { abiFilters += listOf("arm64-v8a") }
+        applicationId = "com.kilocli.android"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+        ndk { abiFilters.add("arm64-v8a") }
     }
 
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
         jvmTarget = "17"
     }
 
-    packagingOptions {
-        pickFirst "**/libtermux_jni.so"
+    packaging {
+        resources {
+            excludes += "**/libtermux_jni.so"
+        }
     }
 
     sourceSets {
