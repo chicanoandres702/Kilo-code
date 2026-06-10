@@ -1,18 +1,11 @@
 <!--
   [Parent Feature/Milestone] Kilo Android App
-  [Subtask] Theme definition for Compose UI
-  [Law Check] 25 lines
+  [Subtask] Color definitions for Compose UI (unused, kept for reference)
+  [Law Check] 10 lines
 -->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <color name="md_theme_light_primary">#4A90E2</color>
     <color name="md_theme_light_onPrimary">#FFFFFF</color>
     <color name="md_theme_light_primaryContainer">#D9E6F2</color>
     <color name="md_theme_light_onPrimaryContainer">#1A3A5F</color>
-    
-    <style name="Theme.KiloAndroid" parent="Theme.Material3.DayNight">
-        <item name="colorPrimary">@color/md_theme_light_primary</item>
-        <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
-        <item name="colorPrimaryContainer">@color/md_theme_light_primaryContainer</item>
-        <item name="colorOnPrimaryContainer">@color/md_theme_light_onPrimaryContainer</item>
-    </style>
 </resources>
