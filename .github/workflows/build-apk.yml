@@ -26,8 +26,15 @@ jobs:
           mkdir -p src/features/kilo-android/assets
           curl -L "https://github.com/Kilo-Org/kilocode/releases/download/v7.3.41/kilo-linux-arm64.tar.gz" -o kilo.tar.gz
           tar -xzf kilo.tar.gz -C /tmp
-          # Find the binary wherever it was extracted
+          # List files for debugging
+          ls -R /tmp/kilo*
+          # Find the binary
           KILO_BIN=$(find /tmp -name "kilo" -type f | head -1)
+          if [ -z "$KILO_BIN" ]; then
+            echo "Error: Kilo binary not found"
+            exit 1
+          fi
+          echo "Found binary at: $KILO_BIN"
           cp "$KILO_BIN" src/features/kilo-android/assets/kilo
           chmod +x src/features/kilo-android/assets/kilo
       
