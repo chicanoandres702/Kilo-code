@@ -39,11 +39,19 @@ jobs:
           chmod +x src/features/kilo-android/assets/kilo
       
       - name: Build APK
-        working-directory: ./src/features/kilo-android
         run: |
-          # Install Gradle directly
-          sudo apt-get install -y gradle
+          # Install Gradle 8.5
+          wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          unzip -q gradle-8.5-bin.zip
+          export PATH=$PATH:$(pwd)/gradle-8.5/bin
+          # Build
           gradle :app:assembleDebug --no-daemon
+      
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kilo-android-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
       
       - name: Upload APK
         uses: actions/upload-artifact@v4
