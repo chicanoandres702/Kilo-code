@@ -86,7 +86,7 @@ class KiloReleaseInstaller(private val context: Context) {
         var remaining = bytes
         val buffer = ByteArray(8192)
         while (remaining > 0) {
-            val read = read(buffer, 0, remaining.coerceAtMost(buffer.size.toInt()).toInt())
+            val read = read(buffer, 0, remaining.coerceAtMost(buffer.size.toLong()).toInt())
             if (read <= 0) throw IOException("Truncated Kilo release archive")
             output.write(buffer, 0, read)
             remaining -= read
