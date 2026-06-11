@@ -1,6 +1,6 @@
 # [Parent Feature/Milestone] Kilo Android App
 # [Subtask] GitHub Actions CI/CD workflow for Android
-# [Law Check] 76 lines
+# [Law Check] 67 lines
 
 name: android-build
 
@@ -29,17 +29,6 @@ jobs:
         with:
           gradle-version: '8.7'
           validate-wrappers: false
-
-      - name: Download Kilo binaries
-        run: |
-          ASSETS_DIR=packages/app/app/src/main/assets
-          mkdir -p "$ASSETS_DIR"
-          for ARCH in arm64 x64; do
-            URL=$(curl -s https://api.github.com/repos/Kilo-Org/kilocode/releases/latest | jq -r --arg name "kilo-linux-${ARCH}.tar.gz" '.assets[] | select(.name==$name) | .browser_download_url')
-            test -n "$URL" && test "$URL" != "null"
-            curl -L "$URL" | tar -xzOf - kilo > "$ASSETS_DIR/kilo-linux-${ARCH}"
-          done
-          chmod +x "$ASSETS_DIR"/kilo-linux-*
 
       - name: Decode Keystore
         if: startsWith(github.ref, 'refs/tags/v')
@@ -70,8 +59,6 @@ jobs:
           fi
           mkdir -p dist
           cp "$APK_PATH" "dist/kilo-${VERSION}-${BUILD_TYPE}.apk"
-          cp packages/app/app/src/main/assets/kilo-linux-arm64 "dist/kilo-linux-arm64"
-          cp packages/app/app/src/main/assets/kilo-linux-x64 "dist/kilo-linux-x64"
           ARTIFACT_NAME=$(echo "${GITHUB_REF_NAME}" | tr '/:' '__')
           echo "ARTIFACT_PATH=dist" >> $GITHUB_ENV
           echo "ARTIFACT_NAME=kilo-android-${ARTIFACT_NAME}" >> $GITHUB_ENV
