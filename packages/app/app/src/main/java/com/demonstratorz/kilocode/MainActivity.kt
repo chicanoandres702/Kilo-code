@@ -13,6 +13,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -62,7 +63,7 @@ fun MainScreen(kiloTermux: KiloTermux) {
                     onClick = { currentScreen = 0 }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.List, "Files") },
+                    icon = { Icon(Icons.AutoMirrored.Filled.List, "Files") },
                     label = { Text("Files") },
                     selected = currentScreen == 1,
                     onClick = { currentScreen = 1 }

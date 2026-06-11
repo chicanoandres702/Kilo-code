@@ -54,7 +54,7 @@ class KiloServerService : Service() {
         }
         
         scope.launch {
-            kiloTermux?.runServer()?.collectLatest { line ->
+            kiloTermux?.runServer()?.collectLatest { _ ->
                 // Server output handling
             }
         }
