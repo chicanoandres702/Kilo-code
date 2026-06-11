@@ -3,12 +3,12 @@
  * [Child Task/Issue] #21
  * [Subtask] Download Kilo release binary when npm is unavailable
  * [Upstream] KiloTermux -> [Downstream] Android launcher script
- * [Law Check] 98 lines | Passed Do It Check
+ * [Law Check] 96 lines | Passed Do It Check
  */
-
 package com.kilocli.android
 
 import android.content.Context
+import android.os.Build
 import android.system.Os
 import java.io.File
 import java.io.IOException
@@ -16,10 +16,9 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.zip.GZIPInputStream
-
 class KiloReleaseInstaller(private val context: Context) {
     fun install(target: File, onStatus: ((String) -> Unit)? = null) {
-        val archive = File(context.cacheDir, "kilo-linux-arm64.tar.gz")
+        val archive = File(context.cacheDir, "kilo-native.tar.gz")
         try {
             onStatus?.invoke("Downloading latest Kilo release...")
             downloadLatestArchive(archive)
@@ -33,21 +32,24 @@ class KiloReleaseInstaller(private val context: Context) {
     }
 
     private fun downloadLatestArchive(archive: File) {
-        val url = URL(latestArm64AssetUrl())
+        val url = URL(latestNativeAssetUrl())
         val connection = url.openConnection() as HttpURLConnection
         connection.connectTimeout = 30_000
         connection.readTimeout = 60_000
         connection.instanceFollowRedirects = true
+        connection.setRequestProperty("User-Agent", "KiloAndroid")
         connection.inputStream.use { input -> archive.outputStream().use { output -> input.copyTo(output) } }
     }
-
-    private fun latestArm64AssetUrl(): String {
+    private fun latestNativeAssetUrl(): String {
+        val asset = when (Build.SUPPORTED_ABIS.firstOrNull()) {
+            "x86_64" -> "kilo-linux-x64-musl.tar.gz"
+            "arm64-v8a" -> "kilo-linux-arm64-musl.tar.gz"
+            else -> throw IOException("Unsupported Android ABI for Kilo CLI: ${Build.SUPPORTED_ABIS.joinToString()}")
+        }
         val json = fetchText("https://api.github.com/repos/Kilo-Org/kilocode/releases/latest")
-        return Regex("\"browser_download_url\"\\s*:\\s*\"([^\"]*kilo-linux-arm64\\.tar\\.gz)\"")
-            .find(json)?.groupValues?.get(1)
-            ?: throw IOException("Missing kilo-linux-arm64.tar.gz in latest Kilo release")
+        return Regex("\"browser_download_url\"\\s*:\\s*\"([^\"]*$asset)\"").find(json)?.groupValues?.get(1)
+            ?: throw IOException("Missing $asset in latest Kilo release")
     }
-
     private fun fetchText(url: String): String {
         val connection = URL(url).openConnection() as HttpURLConnection
         connection.connectTimeout = 30_000
@@ -75,7 +77,6 @@ class KiloReleaseInstaller(private val context: Context) {
         }
         throw IOException("kilo binary was not found in release archive")
     }
-
     private fun ByteArray.string(offset: Int, length: Int): String =
         copyOfRange(offset, offset + length).decodeToString().trimEnd('\u0000', ' ')
 
