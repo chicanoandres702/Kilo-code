@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# AIDDE - Simple one-command interface
-# Usage: ./aidde "your prompt here"
+# [Parent Feature/Milestone] AI Planning Enforcement
+# [Child Task/Issue] #15
+# [Subtask] Route AIDDE CLI through mandatory hook
+# [Upstream] User prompt -> [Downstream] Mandatory AIDDE hook
+# [Law Check] 16 lines | Passed Do It Check
 set -euo pipefail
 
 prompt="${1:-}"
@@ -11,4 +14,4 @@ if [[ -z "$prompt" ]]; then
     exit 2
 fi
 
-bash "$SCRIPT_DIR/packages/scripts/aidde-flow.sh" "$prompt"
+bash "$SCRIPT_DIR/packages/scripts/aidde-hook.sh" "$prompt"

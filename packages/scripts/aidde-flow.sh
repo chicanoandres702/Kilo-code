@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# AIDDE Flow - Prompt planning, execution handoff, and validation.
+# [Parent Feature/Milestone] AI Planning Enforcement
+# [Child Task/Issue] #15
+# [Subtask] Make AIDDE flow mandatory for prompts
+# [Upstream] Mandatory hook -> [Downstream] planning and validation
+# [Law Check] 34 lines | Passed Do It Check
 set -euo pipefail
 
 prompt="${1:-}"
