@@ -1,98 +1,95 @@
 /*
  * [Parent Feature/Milestone] Kilo Android
  * [Child Task/Issue] #22
- * [Subtask] Add terminal access and typed install commands
- * [Upstream] MainScreen -> [Downstream] KiloTermux and Android shell
- * [Law Check] 98 lines | Passed Do It Check
+ * [Subtask] Complete terminal interaction in the Terminal section
+ * [Upstream] MainScreen -> [Downstream] Android shell and Kilo CLI
+ * [Law Check] 95 lines | Passed Do It Check
  */
 package com.demonstratorz.kilocode
-import android.content.Context
+
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import com.kilocli.android.CommandResult
 import com.kilocli.android.KiloTermux
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.*
+
 @Composable
 fun TerminalScreen(kiloTermux: KiloTermux, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var command by remember { mutableStateOf(manualInstallCommands(context.filesDir.absolutePath)) }
-    var output by remember { mutableStateOf(listOf("Terminal ready. Press Run command or Type install commands.")) }
+    val scrollState = rememberLazyListState()
+    var command by remember { mutableStateOf("") }
+    var output by remember { mutableStateOf(listOf(TerminalLine.system("Terminal ready. Shell commands run in ${context.filesDir.absolutePath}."))) }
+    var history by remember { mutableStateOf(emptyList<String>()) }
+    var historyIndex by remember { mutableStateOf(-1) }
     var busy by remember { mutableStateOf(false) }
-    fun append(line: String) { output = output + line }
-    fun run(command: String) {
+    fun append(line: String) { output = output + TerminalLine.output(line) }
+    fun submit(rawCommand: String) {
+        val snapshot = rawCommand.trim()
+        if (snapshot.isBlank()) return
+        command = ""
+        historyIndex = -1
+        history = history + snapshot
+        append("$ $snapshot")
         scope.launch {
             busy = true
             try {
-                append("$ $command")
-                val result = withContext(Dispatchers.IO) { runShell(context, command) }
-                append(result.text())
-            } finally {
-                busy = false
-            }
+                val channel = Channel<String>(Channel.UNLIMITED)
+                val job = launch {
+                    for (line in channel) append(line)
+                }
+                val result = withContext(Dispatchers.IO) { runShell(context, snapshot) { channel.trySend(it) } }
+                channel.close()
+                job.join()
+                append("exit ${result.exitCode}")
+            } finally { busy = false }
         }
+    }
+    fun submitKilo(rawCommand: String) {
+        val snapshot = rawCommand.trim()
+        if (snapshot.isNotBlank()) submit("./kilo $snapshot")
+    }
+    fun recall(delta: Int) {
+        if (history.isEmpty()) return
+        val next = (historyIndex + delta).coerceIn(-1, history.lastIndex)
+        historyIndex = next
+        command = if (next < 0) "" else history[next]
     }
     fun installAutomatically() {
         scope.launch {
             busy = true
             try {
-                append("$ kiloTermux.installNow()")
+                append("$ ./kilo --version")
                 val result = withContext(Dispatchers.IO) { kiloTermux.installNow() }
                 append(result.text())
-            } finally {
-                busy = false
-            }
+            } finally { busy = false }
         }
     }
+    LaunchedEffect(output.size) { scrollState.animateScrollToItem(output.lastIndex) }
     Column(modifier = modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Terminal", style = MaterialTheme.typography.headlineSmall)
-        Text("Run shell commands or type the manual Kilo install sequence.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        OutlinedTextField(value = command, onValueChange = { command = it }, modifier = Modifier.fillMaxWidth().height(120.dp), label = { Text("Command") })
-        Row {
-            Button(onClick = { run(command) }, enabled = !busy) { Text("Run command") }
-            OutlinedButton(onClick = { command = manualInstallCommands(context.filesDir.absolutePath) }, enabled = !busy) { Text("Type install commands") }
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Terminal", style = MaterialTheme.typography.headlineSmall)
+            Text("A focused shell for Kilo setup, diagnostics, and direct CLI commands.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        OutlinedTextField(value = command, onValueChange = { command = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Command") }, singleLine = true, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { submit(command) }))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { submit(command) }, enabled = !busy) { Text("Run shell") }
+            Button(onClick = { submitKilo(command) }, enabled = !busy) { Text("Run Kilo") }
+            OutlinedButton(onClick = { command = manualInstallCommands(context.filesDir.absolutePath) }, enabled = !busy) { Text("Type install") }
             OutlinedButton(onClick = { installAutomatically() }, enabled = !busy) { Text("Run installer") }
         }
-        Surface(modifier = Modifier.weight(1f).fillMaxWidth(), shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceVariant) {
-            LazyColumn(Modifier.padding(12.dp)) { items(output) { Text(it, style = MaterialTheme.typography.bodyMedium) } }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { recall(-1) }, enabled = !busy && history.isNotEmpty()) { Text("↑") }
+            OutlinedButton(onClick = { recall(1) }, enabled = !busy && history.isNotEmpty()) { Text("↓") }
+            OutlinedButton(onClick = { output = listOf(TerminalLine.system("Terminal cleared.")) }, enabled = !busy) { Text("Clear") }
         }
+        TerminalOutput(output, scrollState)
         if (busy) CircularProgressIndicator(Modifier.padding(top = 8.dp))
     }
 }
-private fun manualInstallCommands(filesDir: String) = """
-cd "$filesDir"
-if [ ! -x ./kilo ]; then
-  curl -fL -o kilo-linux-arm64-musl.tar.gz https://github.com/Kilo-Org/kilocode/releases/latest/download/kilo-linux-arm64-musl.tar.gz
-  tar -xzf kilo-linux-arm64-musl.tar.gz kilo
-  chmod +x kilo
-fi
-./kilo --version
-""".trimIndent()
-private fun runShell(context: Context, command: String): CommandResult = runCatching {
-    val process = ProcessBuilder("/system/bin/sh", "-lc", command)
-        .directory(context.filesDir)
-        .redirectErrorStream(true)
-        .start()
-    val stdout = process.inputStream.bufferedReader().use { it.readText() }
-    CommandResult(stdout, "", process.waitFor())
-}.getOrElse { CommandResult("", it.message ?: "Unable to run shell command", 1) }
-private fun CommandResult.text(): String = listOfNotNull(stdout.trim().takeIf(String::isNotBlank), stderr.trim().takeIf(String::isNotBlank), "exit $exitCode").joinToString("\n").ifBlank { "exit $exitCode" }
