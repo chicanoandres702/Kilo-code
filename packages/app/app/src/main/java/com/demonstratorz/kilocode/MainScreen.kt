@@ -1,9 +1,9 @@
 /*
- * [Parent Feature/Milestone] Android Stability
- * [Child Task/Issue] #12
- * [Subtask] Move MainScreen shell out of MainActivity
- * [Upstream] MainActivity -> [Downstream] KiloChatScreen, FileExplorer, SettingsScreen
- * [Law Check] 75 lines | Passed Do It Check
+ * [Parent Feature/Milestone] Kilo Android
+ * [Child Task/Issue] #22
+ * [Subtask] Add terminal access and typed install commands
+ * [Upstream] MainScreen -> [Downstream] TerminalScreen
+ * [Law Check] 80 lines | Passed Do It Check
  */
 
 package com.demonstratorz.kilocode
@@ -48,6 +48,7 @@ fun MainScreen(kiloTermux: KiloTermux, installState: InstallState, onRetry: () -
                 NavigationBarItem(icon = { Icon(Icons.Default.Info, "Chat") }, label = { Text("Chat") }, selected = currentScreen == 0, onClick = { currentScreen = 0 })
                 NavigationBarItem(icon = { Icon(Icons.AutoMirrored.Filled.List, "Files") }, label = { Text("Files") }, selected = currentScreen == 1, onClick = { currentScreen = 1 })
                 NavigationBarItem(icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Settings") }, selected = currentScreen == 2, onClick = { currentScreen = 2 })
+                NavigationBarItem(icon = { Icon(Icons.Default.Code, "Terminal") }, label = { Text("Terminal") }, selected = currentScreen == 3, onClick = { currentScreen = 3 })
             }
         }
     ) { padding ->
@@ -69,7 +70,8 @@ private fun MainContent(
         0 -> KiloChatScreen(kiloTermux, installState, settingsState, modifier)
         1 -> FileExplorer(kiloTermux, installState, modifier)
         2 -> SettingsScreen(settingsState, modifier)
+        3 -> TerminalScreen(kiloTermux, modifier)
     }
 
-    if (!isReady) InstallOverlay(installState, onRetry)
+    if (!isReady && currentScreen != 3) InstallOverlay(installState, onRetry)
 }
