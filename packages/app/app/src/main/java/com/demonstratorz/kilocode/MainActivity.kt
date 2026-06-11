@@ -1,7 +1,7 @@
 /*
- * [Parent Feature/Milestone] Android Stability
- * [Child Task/Issue] #12
- * [Subtask] Collect Kilo install state in MainActivity
+ * [Parent Feature/Milestone] Kilo Android
+ * [Child Task/Issue] #21
+ * [Subtask] Emit explicit Android install states
  * [Upstream] KiloTermux -> [Downstream] MainScreen
  * [Law Check] 43 lines | Passed Do It Check
  */
@@ -29,14 +29,14 @@ class MainActivity : ComponentActivity() {
         kiloTermux = KiloTermux.create(this)
 
         setContent {
-            var installState by remember { mutableStateOf(InstallState(status = "Checking Kilo binary...")) }
+            var installState by remember { mutableStateOf(InstallState(status = "Checking Kilo CLI...")) }
             LaunchedEffect(kiloTermux) {
                 kiloTermux.initialize().collect { installState = it }
             }
 
             KiloAndroidTheme {
                 MainScreen(kiloTermux, installState) {
-                    installState = InstallState(status = "Checking Kilo binary...")
+                    installState = InstallState(status = "Checking Kilo CLI...")
                 }
             }
         }
