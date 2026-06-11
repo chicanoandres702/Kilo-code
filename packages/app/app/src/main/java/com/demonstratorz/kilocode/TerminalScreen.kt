@@ -3,17 +3,11 @@
  * [Child Task/Issue] #22
  * [Subtask] Add terminal access and typed install commands
  * [Upstream] MainScreen -> [Downstream] KiloTermux and Android shell
- * [Law Check] 100 lines | Passed Do It Check
+ * [Law Check] 98 lines | Passed Do It Check
  */
 package com.demonstratorz.kilocode
 import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -34,7 +28,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.kilocli.android.CommandResult
 import com.kilocli.android.KiloTermux
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 @Composable
 fun TerminalScreen(kiloTermux: KiloTermux, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -46,19 +42,25 @@ fun TerminalScreen(kiloTermux: KiloTermux, modifier: Modifier = Modifier) {
     fun run(command: String) {
         scope.launch {
             busy = true
-            append("$ $command")
-            val result = runShell(context, command)
-            append(result.text())
-            busy = false
+            try {
+                append("$ $command")
+                val result = withContext(Dispatchers.IO) { runShell(context, command) }
+                append(result.text())
+            } finally {
+                busy = false
+            }
         }
     }
     fun installAutomatically() {
         scope.launch {
             busy = true
-            append("$ kiloTermux.installNow()")
-            val result = kiloTermux.installNow()
-            append(result.text())
-            busy = false
+            try {
+                append("$ kiloTermux.installNow()")
+                val result = withContext(Dispatchers.IO) { kiloTermux.installNow() }
+                append(result.text())
+            } finally {
+                busy = false
+            }
         }
     }
     Column(modifier = modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -93,8 +95,4 @@ private fun runShell(context: Context, command: String): CommandResult = runCatc
     val stdout = process.inputStream.bufferedReader().use { it.readText() }
     CommandResult(stdout, "", process.waitFor())
 }.getOrElse { CommandResult("", it.message ?: "Unable to run shell command", 1) }
-private fun CommandResult.text(): String = buildString {
-    if (stdout.isNotBlank()) appendLine(stdout.trim())
-    if (stderr.isNotBlank()) appendLine(stderr.trim())
-    appendLine("exit $exitCode")
-}.ifBlank { "exit $exitCode" }
+private fun CommandResult.text(): String = listOfNotNull(stdout.trim().takeIf(String::isNotBlank), stderr.trim().takeIf(String::isNotBlank), "exit $exitCode").joinToString("\n").ifBlank { "exit $exitCode" }
