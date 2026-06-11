@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# AIDDE Plan - Enforce milestone, issue, branch, gist, and worktree setup.
+# [Parent Feature/Milestone] AI Planning Enforcement | [Child Task/Issue] #15
+# [Subtask] Make AIDDE planning script mandatory | [Upstream] Mandatory hook -> [Downstream] GitHub planning hierarchy
+# [Law Check] 100 lines | Passed Do It Check
 set -euo pipefail
-
 prompt="${1:-General Planning}"
 issue_title="${2:-Implement ${prompt}}"
 PLAN_FILE=$(mktemp)
@@ -73,7 +74,6 @@ task_slug=$(slugify "$issue_title")
 integration_branch="feature/${milestone_slug}-main"
 task_branch="feature/${milestone_slug}/${task_slug}"
 default_branch=$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name')
-
 git fetch origin "$default_branch"
 branch "$integration_branch" "origin/$default_branch"
 if [[ "${AIDDE_USE_WORKTREE:-0}" == "1" ]]; then
