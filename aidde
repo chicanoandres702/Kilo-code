@@ -1,29 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # AIDDE - Simple one-command interface
 # Usage: ./aidde "your prompt here"
-
 set -euo pipefail
 
-# Simple 3-step flow
-main() {
-    local prompt="${1:-}"
-    
-    echo "🚀 AIDDE - Processing: $prompt"
-    
-    # Step 1: Auto-plan (Milestone + Issue + Branch)
-    echo "📋 Step 1: Creating plan..."
-    ./script/aidde-plan.sh "$prompt" 2>/dev/null || echo "  → Using existing plan"
-    
-    # Step 2: Execute (code generation)
-    echo "✍️  Step 2: Generating code..."
-    # This would trigger code generation with trace headers
-    
-    # Step 3: Validate (all 8 gates)
-    echo "✅ Step 3: Validating..."
-    ./script/aidde-gates.sh 2>/dev/null || echo "  → Run validate-aidde for full check"
-    
-    echo ""
-    echo "✓ Done. Feature: $prompt"
-}
+prompt="${1:-}"
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-main "$@"
+if [[ -z "$prompt" ]]; then
+    echo "Usage: ./aidde \"your prompt here\"" >&2
+    exit 2
+fi
+
+bash "$SCRIPT_DIR/packages/scripts/aidde-flow.sh" "$prompt"

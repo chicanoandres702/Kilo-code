@@ -1,0 +1,48 @@
+# Keep AI context focused and avoid indexing generated, local, or secret-heavy files.
+
+# Repository metadata and tool state
+.git/
+.gradle/
+.kilo/plans/
+.kilo/run-script
+.kilo/agent-manager.json
+.kilo.bak/
+.worktrees/
+
+# Dependencies and build outputs
+node_modules/
+vendor/
+build/
+**/build/
+out/
+dist/
+coverage/
+.nyc_output/
+src/features/kilo-android/assets/kilo
+assets/kilo
+
+# Local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+service-account*.json
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*.log
+*.tmp
+
+# Python cache/environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/

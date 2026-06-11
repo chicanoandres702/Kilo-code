@@ -1,3 +1,52 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+service-account*.json
+.worktrees/
 src/features/kilo-android/assets/kilo
 assets/kilo
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dependencies
+node_modules/
+.gradle/
+vendor/
+
+# Build outputs
+build/
+**/build/
+out/
+dist/
+coverage/
+.nyc_output/
+
+# Local Android/Gradle
 local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Python/virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Logs/temp/cache
+*.log
+*.tmp
+.cache/
+.tmp/

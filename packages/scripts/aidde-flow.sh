@@ -1,37 +1,31 @@
-#!/bin/bash
-# AIDDE Flow - Complete session lifecycle handler
+#!/usr/bin/env bash
+# AIDDE Flow - Prompt planning, execution handoff, and validation.
 set -euo pipefail
 
-# [Parent Feature/Milestone] AIDDE Infrastructure
-# [Subtask] Handle full AI session flow with delegation
-# [Law Check] 60 lines | Passed Do It Check
+prompt="${1:-}"
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-# Colors
-G='\033[0;32m' R='\033[0;31m' Y='\033[1;33m' NC='\033[0m'
+if [[ -z "$prompt" ]]; then
+    echo "AIDDE planning mode requires a prompt." >&2
+    exit 2
+fi
 
-get_repo_info() {
-    REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner' 2>/dev/null || echo "owner/repo")
-    OWNER=$(echo "$REPO" | cut -d'/' -f1)
-    REPO_NAME=$(echo "$REPO" | cut -d'/' -f2)
-}
+echo "=== Stage 1: Project Mapper ==="
+bash "$SCRIPT_DIR/aidde-plan.sh" "$prompt" "Implement ${prompt}"
 
-stage_1_mapper() {
-    echo -e "${G}=== Stage 1: Project Mapper ===${NC}"
-    get_repo_info
-    echo "📋 Prompt: ${1:-}"
-    echo "🔍 Syncing GitHub state..."
-    gh api repos/"$OWNER"/"$REPO_NAME"/milestones --jq '.[] | select(.state=="open") | .title' 2>/dev/null || true
-}
+echo "=== Stage 2: Contract Import ==="
+echo "Load centralized models/types before writing logic. HALT if no model exists."
 
-stage_4_quad() {
-    echo -e "${G}=== Stage 4: Quad Validation ===${NC}"
-    [[ -f "scripts/aidde-gates.sh" ]] && ./scripts/aidde-gates.sh 2>/dev/null || echo "⚠️ Running inline gates"
-}
+echo "=== Stage 3: Code Generation ==="
+echo "Implement only on the task branch. Keep files <=100 active lines and add trace headers."
+echo "Optional: AIDDE_USE_WORKTREE=1 opens the task branch in a parallel git worktree."
+echo "Optional: AIDDE_CREATE_GIST=0 disables gist-backed planning artifacts."
 
-main() {
-    stage_1_mapper "$1"
-    stage_4_quad
-    echo -e "${G}✅ AIDDE Flow Complete${NC}"
-}
+echo "=== Stage 4: AIDDE Quad ==="
+if [[ -f "$SCRIPT_DIR/aidde-gates.sh" ]]; then
+    bash "$SCRIPT_DIR/aidde-gates.sh"
+else
+    echo "⚠️ aidde-gates.sh not found; run validation manually."
+fi
 
-main "$@"
+echo "✅ AIDDE Flow Complete"
