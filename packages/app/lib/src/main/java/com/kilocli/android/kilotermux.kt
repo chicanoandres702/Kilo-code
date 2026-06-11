@@ -3,7 +3,7 @@
  * [Child Task/Issue] #21
  * [Subtask] Add npm-backed Kilo CLI auto-install launcher
  * [Upstream] MainActivity -> [Downstream] KiloProcessManager
- * [Law Check] 91 lines | Passed Do It Check
+ * [Law Check] 89 lines | Passed Do It Check
  */
 
 package com.kilocli.android
@@ -26,7 +26,7 @@ class KiloTermux(private val context: Context) {
     }
 
     private fun ensureBinaryInstalled(onStatus: ((InstallState) -> Unit)? = null): String? = synchronized(installLock) {
-        if (!processManager.isBinaryInstalled()) return@synchronized try {
+        if (!processManager.isBinaryInstalled() || !processManager.isLauncherScript()) return@synchronized try {
             onStatus?.invoke(InstallState(progress = 0.2f, status = "Installing Kilo CLI with npm..."))
             installKiloBinary(onStatus)
             null
@@ -63,10 +63,8 @@ class KiloTermux(private val context: Context) {
     private fun launcherScript(): String = "#!/system/bin/sh\nset -e\nif command -v npx >/dev/null 2>&1; then\n  exec npx --yes --package @kilocode/cli kilo \"\$@\"\nfi\nif command -v npm >/dev/null 2>&1; then\n  exec npm exec --yes --package @kilocode/cli -- kilo \"\$@\"\nfi\necho \"Missing npm/npx. Install Node.js or Termux npm first.\" >&2\nexit 127\n"
 
     private fun verifyLauncher(binary: File) {
-        val process = ProcessBuilder(binary.absolutePath, "--version").directory(context.filesDir).redirectErrorStream(true).start()
-        val output = process.inputStream.bufferedReader().use { it.readText() }
-        val exitCode = process.waitFor()
-        if (exitCode != 0) throw IOException("Kilo launcher verification failed: ${output.ifBlank { "exit code $exitCode" }}")
+        val result = processManager.verifyLauncher(binary)
+        if (result.exitCode != 0) throw IOException("Kilo launcher verification failed: ${result.stdout.ifBlank { result.stderr }}")
     }
 
     fun runCommand(cmd: String, args: List<String> = emptyList()): CommandResult {

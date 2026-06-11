@@ -1,8 +1,9 @@
 /*
- * [Parent Feature/Milestone] Kilo Android App
- * [Subtask] Guard native ProcessBuilder against missing Kilo binary
+ * [Parent Feature/Milestone] Kilo Android
+ * [Child Task/Issue] #21
+ * [Subtask] Execute Android launcher through shell when noexec blocks direct runs
  * [Upstream] KiloTermux -> [Downstream] Android Process API
- * [Law Check] 48 lines | Passed Do It Check
+ * [Law Check] 58 lines | Passed Do It Check
  */
 
 package com.kilocli.android
@@ -16,34 +17,42 @@ class KiloProcessManager(private val context: Context) {
 
     fun runCommand(cmd: String, args: List<String> = emptyList()): CommandResult {
         if (!isBinaryInstalled()) {
-            return CommandResult("", "Kilo binary is missing at ${binaryFile.absolutePath}. Initialize KiloTermux before running commands.", 1)
+            return CommandResult("", "Kilo CLI is missing at ${binaryFile.absolutePath}. Retry setup in the app.", 1)
         }
-
         return try {
-            val process = ProcessBuilder(mutableListOf(binaryFile.absolutePath, cmd) + args)
-                .directory(context.filesDir)
-                .redirectErrorStream(true)
-                .start()
-
+            val process = processBuilder(binaryFile, listOf(cmd) + args).start()
             val exitCode = process.waitFor()
             val stdout = process.inputStream.bufferedReader().use { it.readText() }
             CommandResult(stdout, "", exitCode)
         } catch (e: Exception) {
-            CommandResult("", "Failed to run Kilo binary at ${binaryFile.absolutePath}: ${e.message ?: "Unknown error"}", 1)
+            CommandResult("", "Failed to run Kilo CLI at ${binaryFile.absolutePath}: ${e.message ?: "Unknown error"}", 1)
         }
     }
 
-    // New method for long-running processes (like servers)
     fun startProcess(cmd: String, args: List<String> = emptyList()): Process {
-        if (!isBinaryInstalled()) {
-            throw IOException("Kilo binary is missing at ${binaryFile.absolutePath}")
-        }
-
-        return ProcessBuilder(mutableListOf(binaryFile.absolutePath, cmd) + args)
-            .directory(context.filesDir)
-            .redirectErrorStream(true)
-            .start()
+        if (!isBinaryInstalled()) throw IOException("Kilo CLI is missing at ${binaryFile.absolutePath}")
+        return processBuilder(binaryFile, listOf(cmd) + args).start()
     }
+
+    fun verifyLauncher(binary: File): CommandResult = try {
+        val process = processBuilder(binary, listOf("--version")).start()
+        val exitCode = process.waitFor()
+        val output = process.inputStream.bufferedReader().use { it.readText() }
+        CommandResult(output, "", exitCode)
+    } catch (e: Exception) {
+        CommandResult("", e.message ?: "Unable to verify Kilo launcher", 1)
+    }
+
+    private fun processBuilder(binary: File, args: List<String>): ProcessBuilder {
+        val command = if (binary.isShellScript()) listOf("/system/bin/sh", binary.absolutePath) + args else listOf(binary.absolutePath) + args
+        return ProcessBuilder(command).directory(context.filesDir).redirectErrorStream(true)
+    }
+
+    private fun File.isShellScript(): Boolean = isFile && canRead() && runCatching {
+        inputStream().bufferedReader().use { it.readLine()?.startsWith("#!") == true }
+    }.getOrDefault(false)
+
+    fun isLauncherScript(): Boolean = binaryFile.isShellScript()
 
     fun isBinaryInstalled(): Boolean = binaryFile.isFile && binaryFile.canRead() && binaryFile.canExecute() && binaryFile.length() > 0
 }
