@@ -48,7 +48,7 @@ fun MainScreen(kiloTermux: KiloTermux, installState: InstallState, onRetry: () -
                 NavigationBarItem(icon = { Icon(Icons.Default.Info, "Chat") }, label = { Text("Chat") }, selected = currentScreen == 0, onClick = { currentScreen = 0 })
                 NavigationBarItem(icon = { Icon(Icons.AutoMirrored.Filled.List, "Files") }, label = { Text("Files") }, selected = currentScreen == 1, onClick = { currentScreen = 1 })
                 NavigationBarItem(icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Settings") }, selected = currentScreen == 2, onClick = { currentScreen = 2 })
-                NavigationBarItem(icon = { Icon(Icons.Default.Code, "Terminal") }, label = { Text("Terminal") }, selected = currentScreen == 3, onClick = { currentScreen = 3 })
+                NavigationBarItem(icon = { Icon(Icons.Default.Info, "Terminal") }, label = { Text("Terminal") }, selected = currentScreen == 3, onClick = { currentScreen = 3 })
             }
         }
     ) { padding ->
