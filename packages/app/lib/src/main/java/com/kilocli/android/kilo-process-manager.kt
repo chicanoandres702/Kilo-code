@@ -3,7 +3,7 @@
  * [Child Task/Issue] #21
  * [Subtask] Execute Android launcher through shell when noexec blocks direct runs
  * [Upstream] KiloTermux -> [Downstream] Android Process API
- * [Law Check] 58 lines | Passed Do It Check
+ * [Law Check] 69 lines | Passed Do It Check
  */
 
 package com.kilocli.android
@@ -52,7 +52,18 @@ class KiloProcessManager(private val context: Context) {
         inputStream().bufferedReader().use { it.readLine()?.startsWith("#!") == true }
     }.getOrDefault(false)
 
-    fun isLauncherScript(): Boolean = binaryFile.isShellScript()
+    fun isLauncherReady(hasNodeLauncher: Boolean): Boolean {
+        val text = launcherText()
+        return binaryFile.isShellScript() &&
+            ((text.contains("@kilocode/cli") && hasNodeLauncher) || (text.contains("native-kilo") && isNativeBinaryInstalled()))
+    }
+
+    private fun launcherText(): String = if (binaryFile.isFile && binaryFile.canRead()) binaryFile.readText() else ""
+
+    fun isNativeBinaryInstalled(): Boolean {
+        val native = File(context.codeCacheDir ?: context.cacheDir, "kilo")
+        return native.isFile && native.canRead() && native.canExecute() && native.length() > 0
+    }
 
     fun isBinaryInstalled(): Boolean = binaryFile.isFile && binaryFile.canRead() && binaryFile.canExecute() && binaryFile.length() > 0
 }

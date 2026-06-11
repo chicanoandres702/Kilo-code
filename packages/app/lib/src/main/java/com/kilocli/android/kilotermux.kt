@@ -1,9 +1,9 @@
 /*
  * [Parent Feature/Milestone] Kilo Android
  * [Child Task/Issue] #21
- * [Subtask] Add npm-backed Kilo CLI auto-install launcher
+ * [Subtask] Add release-binary fallback when npm is unavailable
  * [Upstream] MainActivity -> [Downstream] KiloProcessManager
- * [Law Check] 89 lines | Passed Do It Check
+ * [Law Check] 100 lines | Passed Do It Check
  */
 
 package com.kilocli.android
@@ -26,9 +26,10 @@ class KiloTermux(private val context: Context) {
     }
 
     private fun ensureBinaryInstalled(onStatus: ((InstallState) -> Unit)? = null): String? = synchronized(installLock) {
-        if (!processManager.isBinaryInstalled() || !processManager.isLauncherScript()) return@synchronized try {
-            onStatus?.invoke(InstallState(progress = 0.2f, status = "Installing Kilo CLI with npm..."))
-            installKiloBinary(onStatus)
+        val hasNodeLauncher = hasNodeLauncher()
+        if (!processManager.isBinaryInstalled() || !processManager.isLauncherReady(hasNodeLauncher)) return@synchronized try {
+            onStatus?.invoke(InstallState(progress = 0.2f, status = "Installing Kilo CLI..."))
+            installKiloBinary(hasNodeLauncher, onStatus)
             null
         } catch (e: Exception) {
             e.message ?: "Unable to install Kilo CLI"
@@ -36,21 +37,22 @@ class KiloTermux(private val context: Context) {
         null
     }
 
-    private fun installKiloBinary(onStatus: ((InstallState) -> Unit)?) {
+    private fun installKiloBinary(hasNodeLauncher: Boolean, onStatus: ((InstallState) -> Unit)?) {
         val binary = File(context.filesDir, "kilo")
         val tempBinary = File(context.filesDir, "kilo.tmp")
         val backupBinary = File(context.filesDir, "kilo.backup")
-        tempBinary.delete()
-        backupBinary.delete()
-        onStatus?.invoke(InstallState(progress = 0.45f, status = "Preparing npm launcher..."))
-        tempBinary.writeText(launcherScript())
-        if (!tempBinary.setReadable(true, false) || !tempBinary.setExecutable(true, false)) {
-            throw IOException("Unable to set executable permissions on Kilo launcher: ${tempBinary.absolutePath}")
+        val nativeBinary = File(context.codeCacheDir ?: context.cacheDir, "kilo")
+        listOf(tempBinary, backupBinary, nativeBinary).forEach { it.delete() }
+        onStatus?.invoke(InstallState(progress = 0.45f, status = "Preparing launcher..."))
+        if (hasNodeLauncher) {
+            tempBinary.writeText(npmLauncherScript())
+        } else {
+            KiloReleaseInstaller(context).install(nativeBinary) { onStatus?.invoke(InstallState(progress = 0.65f, status = it)) }
+            tempBinary.writeText(nativeLauncherScript(nativeBinary.absolutePath))
         }
+        if (!tempBinary.setReadable(true, false) || !tempBinary.setExecutable(true, false)) throw IOException("Unable to set executable permissions on Kilo launcher: ${tempBinary.absolutePath}")
         try { Os.chmod(tempBinary.absolutePath, 0x1C0) } catch (_: Exception) {}
-        if (binary.exists() && !binary.renameTo(backupBinary)) {
-            throw IOException("Unable to replace existing Kilo launcher: ${binary.absolutePath}")
-        }
+        if (binary.exists() && !binary.renameTo(backupBinary)) throw IOException("Unable to replace existing Kilo launcher: ${binary.absolutePath}")
         if (!tempBinary.renameTo(binary)) {
             backupBinary.renameTo(binary)
             throw IOException("Unable to install Kilo launcher at ${binary.absolutePath}")
@@ -60,7 +62,16 @@ class KiloTermux(private val context: Context) {
         if (!processManager.isBinaryInstalled()) throw IOException("Installed Kilo launcher is not executable: ${binary.absolutePath}")
     }
 
-    private fun launcherScript(): String = "#!/system/bin/sh\nset -e\nif command -v npx >/dev/null 2>&1; then\n  exec npx --yes --package @kilocode/cli kilo \"\$@\"\nfi\nif command -v npm >/dev/null 2>&1; then\n  exec npm exec --yes --package @kilocode/cli -- kilo \"\$@\"\nfi\necho \"Missing npm/npx. Install Node.js or Termux npm first.\" >&2\nexit 127\n"
+    private fun npmLauncherScript(): String = "#!/system/bin/sh\nset -e\nif command -v npx >/dev/null 2>&1; then\n  exec npx --yes --package @kilocode/cli kilo \"\$@\"\nfi\nif command -v npm >/dev/null 2>&1; then\n  exec npm exec --yes --package @kilocode/cli -- kilo \"\$@\"\nfi\necho \"Missing npm/npx. Install Node.js or Termux npm first.\" >&2\nexit 127\n"
+
+    private fun nativeLauncherScript(path: String): String = "#!/system/bin/sh\n# native-kilo\nexec \"$path\" \"\$@\"\n"
+
+    private fun hasNodeLauncher(): Boolean = hasCommand("npx") || hasCommand("npm")
+
+    private fun hasCommand(command: String): Boolean = ProcessBuilder("/system/bin/sh", "-lc", "command -v $command >/dev/null 2>&1")
+        .redirectErrorStream(true)
+        .start()
+        .waitFor() == 0
 
     private fun verifyLauncher(binary: File) {
         val result = processManager.verifyLauncher(binary)
