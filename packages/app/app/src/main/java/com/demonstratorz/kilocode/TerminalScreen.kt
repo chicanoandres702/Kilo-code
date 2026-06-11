@@ -3,7 +3,7 @@
  * [Child Task/Issue] #22
  * [Subtask] Complete terminal interaction in the Terminal section
  * [Upstream] MainScreen -> [Downstream] Android shell and Kilo CLI
- * [Law Check] 95 lines | Passed Do It Check
+ * [Law Check] 97 lines | Passed Do It Check
  */
 package com.demonstratorz.kilocode
 
@@ -14,6 +14,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardActions
+import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.kilocli.android.KiloTermux
 import kotlinx.coroutines.channels.Channel
