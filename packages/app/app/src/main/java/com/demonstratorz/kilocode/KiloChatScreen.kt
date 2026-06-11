@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.kilocli.android.KiloMode
 import com.kilocli.android.KiloTermux
-import com.kilocli.android.MessageBubble
 import com.kilocli.android.SettingsState
 
 @OptIn(ExperimentalMaterial3Api::class)
