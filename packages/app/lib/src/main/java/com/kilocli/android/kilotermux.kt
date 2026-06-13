@@ -52,6 +52,13 @@ class KiloTermux(private val context: Context) {
             if (!tempNativeBinary.setReadable(true, false) || !tempNativeBinary.setExecutable(true, false)) throw IOException("Unable to set executable permissions on Kilo binary: ${tempNativeBinary.absolutePath}")
             try { Os.chmod(tempNativeBinary.absolutePath, 0x1C0) } catch (_: Exception) {}
             if (!tempNativeBinary.renameTo(nativeBinary)) throw IOException("Unable to install Kilo binary at ${nativeBinary.absolutePath}")
+            // Explicitly ensure permissions after rename
+            nativeBinary.setReadable(true, true)
+            nativeBinary.setWritable(true, true)
+            nativeBinary.setExecutable(true, true)
+            try { Os.chmod(nativeBinary.absolutePath, 0x1C0) } catch (_: Exception) {}
+            if (!nativeBinary.canExecute()) throw IOException("Kilo binary is not executable after installation: ${nativeBinary.absolutePath}")
+
             tempBinary.writeText(nativeLauncherScript(nativeBinary.absolutePath))
         }
         if (!tempBinary.setReadable(true, false) || !tempBinary.setExecutable(true, false)) throw IOException("Unable to set executable permissions on Kilo launcher: ${tempBinary.absolutePath}")
