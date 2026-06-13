@@ -3,13 +3,15 @@
  * [Child Task/Issue] #21
  * [Subtask] Store Kilo CLI outside APK and chmod it
  * [Upstream] KiloTermux -> [Downstream] KiloProcessManager
- * [Law Check] 96 lines | Passed Do It Check
+ * [Law Check] 100 lines | Passed Do It Check
  */
 package com.kilocli.android
 import android.content.Context
 import android.system.Os
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOn
 import java.io.File
 import java.io.IOException
 class KiloTermux(private val context: Context) {
@@ -24,7 +26,7 @@ class KiloTermux(private val context: Context) {
         val installError = ensureBinaryInstalled { trySend(it) }
         trySend(InstallState(progress = if (installError == null) 1f else 0.95f, status = installError ?: "Ready", isComplete = installError == null))
         close()
-    }
+    }.flowOn(Dispatchers.IO)
     fun installNow(): CommandResult {
         val error = ensureBinaryInstalled()
         return if (error == null) CommandResult("Kilo CLI is ready", "", 0) else CommandResult("", error, 1)
@@ -92,9 +94,7 @@ class KiloTermux(private val context: Context) {
         trySend(result.stdout)
         if (result.stderr.isNotEmpty()) trySend("Error: ${result.stderr}")
         close()
-    }
+    }.flowOn(Dispatchers.IO)
 
-    companion object {
-        fun create(context: Context) = KiloTermux(context)
-    }
+    companion object { fun create(context: Context) = KiloTermux(context) }
 }
