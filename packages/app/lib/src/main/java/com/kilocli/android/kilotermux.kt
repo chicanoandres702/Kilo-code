@@ -1,13 +1,11 @@
 /*
  * [Parent Feature/Milestone] Kilo Android
- * [Child Task/Issue] #22
- * [Subtask] Expose manual Kilo install entry point
- * [Upstream] TerminalScreen -> [Downstream] KiloProcessManager
- * [Law Check] 99 lines | Passed Do It Check
+ * [Child Task/Issue] #21
+ * [Subtask] Store Kilo CLI outside APK and chmod it
+ * [Upstream] KiloTermux -> [Downstream] KiloProcessManager
+ * [Law Check] 96 lines | Passed Do It Check
  */
-
 package com.kilocli.android
-
 import android.content.Context
 import android.system.Os
 import kotlinx.coroutines.flow.Flow
@@ -16,8 +14,12 @@ import java.io.File
 import java.io.IOException
 class KiloTermux(private val context: Context) {
     private val processManager = KiloProcessManager(context)
+    private val binary = KiloProcessManager.launcherFile(context)
+    private val tempBinary = File(binary.parentFile, "kilo.tmp")
+    private val backupBinary = File(binary.parentFile, "kilo.backup")
+    private val nativeBinary = KiloProcessManager.nativeFile(context)
+    private val tempNativeBinary = File(nativeBinary.parentFile, "kilo.tmp")
     private val installLock = Any()
-
     fun initialize(): Flow<InstallState> = callbackFlow {
         val installError = ensureBinaryInstalled { trySend(it) }
         trySend(InstallState(progress = if (installError == null) 1f else 0.95f, status = installError ?: "Ready", isComplete = installError == null))
@@ -39,23 +41,22 @@ class KiloTermux(private val context: Context) {
         null
     }
     private fun installKiloBinary(hasNodeLauncher: Boolean, onStatus: ((InstallState) -> Unit)?) {
-        val binary = File(context.filesDir, "kilo")
-        val tempBinary = File(context.filesDir, "kilo.tmp")
-        val backupBinary = File(context.filesDir, "kilo.backup")
-        val nativeBinary = File(context.codeCacheDir ?: context.cacheDir, "kilo")
-        listOf(tempBinary, backupBinary, nativeBinary).forEach { it.delete() }
+        listOf(tempBinary, backupBinary, nativeBinary, tempNativeBinary).forEach { it.delete() }
         onStatus?.invoke(InstallState(progress = 0.45f, status = "Preparing launcher..."))
         if (hasNodeLauncher) {
             tempBinary.writeText(npmLauncherScript())
         } else {
-            KiloReleaseInstaller(context).install(nativeBinary) { onStatus?.invoke(InstallState(progress = 0.65f, status = it)) }
+            KiloReleaseInstaller(context).install(tempNativeBinary) { onStatus?.invoke(InstallState(progress = 0.65f, status = it)) }
+            if (!tempNativeBinary.setReadable(true, false) || !tempNativeBinary.setExecutable(true, false)) throw IOException("Unable to set executable permissions on Kilo binary: ${tempNativeBinary.absolutePath}")
+            try { Os.chmod(tempNativeBinary.absolutePath, 0x1C0) } catch (_: Exception) {}
+            if (!tempNativeBinary.renameTo(nativeBinary)) throw IOException("Unable to install Kilo binary at ${nativeBinary.absolutePath}")
             tempBinary.writeText(nativeLauncherScript(nativeBinary.absolutePath))
         }
         if (!tempBinary.setReadable(true, false) || !tempBinary.setExecutable(true, false)) throw IOException("Unable to set executable permissions on Kilo launcher: ${tempBinary.absolutePath}")
         try { Os.chmod(tempBinary.absolutePath, 0x1C0) } catch (_: Exception) {}
         if (binary.exists() && !binary.renameTo(backupBinary)) throw IOException("Unable to replace existing Kilo launcher: ${binary.absolutePath}")
         if (!tempBinary.renameTo(binary)) {
-            backupBinary.renameTo(binary)
+            if (backupBinary.exists() && !backupBinary.renameTo(binary)) throw IOException("Unable to restore previous Kilo launcher: ${binary.absolutePath}")
             throw IOException("Unable to install Kilo launcher at ${binary.absolutePath}")
         }
         onStatus?.invoke(InstallState(progress = 0.8f, status = "Verifying Kilo CLI launcher..."))

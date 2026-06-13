@@ -1,10 +1,12 @@
 <!--
   [Parent Feature/Milestone] Kilo Android App
+  [Child Task/Issue] #21
   [Subtask] Android manifest declarations
-  [Law Check] 35 lines
+  [Law Check] 36 lines
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />

@@ -1,9 +1,9 @@
 /*
  * [Parent Feature/Milestone] Kilo Android
  * [Child Task/Issue] #21
- * [Subtask] Execute Android launcher through shell when noexec blocks direct runs
+ * [Subtask] Store launcher and native binary in app-specific storage
  * [Upstream] KiloTermux -> [Downstream] Android Process API
- * [Law Check] 69 lines | Passed Do It Check
+ * [Law Check] 82 lines | Passed Do It Check
  */
 
 package com.kilocli.android
@@ -13,7 +13,9 @@ import java.io.File
 import java.io.IOException
 
 class KiloProcessManager(private val context: Context) {
-    private val binaryFile = File(context.filesDir, "kilo")
+    private val launcherDirectory = launcherDirectory(context)
+    private val nativeDirectory = nativeDirectory(context)
+    private val binaryFile = File(launcherDirectory, "kilo")
 
     fun runCommand(cmd: String, args: List<String> = emptyList()): CommandResult {
         if (!isBinaryInstalled()) {
@@ -45,7 +47,7 @@ class KiloProcessManager(private val context: Context) {
 
     private fun processBuilder(binary: File, args: List<String>): ProcessBuilder {
         val command = if (binary.isShellScript()) listOf("/system/bin/sh", binary.absolutePath) + args else listOf(binary.absolutePath) + args
-        return ProcessBuilder(command).directory(context.filesDir).redirectErrorStream(true)
+        return ProcessBuilder(command).directory(binary.parentFile ?: launcherDirectory).redirectErrorStream(true)
     }
 
     private fun File.isShellScript(): Boolean = isFile && canRead() && runCatching {
@@ -61,9 +63,20 @@ class KiloProcessManager(private val context: Context) {
     private fun launcherText(): String = if (binaryFile.isFile && binaryFile.canRead()) binaryFile.readText() else ""
 
     fun isNativeBinaryInstalled(): Boolean {
-        val native = File(context.codeCacheDir ?: context.cacheDir, "kilo")
+        val native = File(nativeDirectory, "kilo")
         return native.isFile && native.canRead() && native.canExecute() && native.length() > 0
     }
 
     fun isBinaryInstalled(): Boolean = binaryFile.isFile && binaryFile.canRead() && binaryFile.canExecute() && binaryFile.length() > 0
+
+    companion object {
+        fun launcherFile(context: Context): File = File(launcherDirectory(context), "kilo")
+        fun nativeFile(context: Context): File = File(nativeDirectory(context), "kilo")
+
+        private fun launcherDirectory(context: Context): File = context.kiloStorageDirectory("launcher")
+        private fun nativeDirectory(context: Context): File = context.kiloStorageDirectory("native")
+
+        private fun Context.kiloStorageDirectory(name: String): File =
+            (getExternalFilesDir(name) ?: File(File(filesDir, "kilo"), name)).apply { mkdirs() }
+    }
 }
