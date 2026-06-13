@@ -62,7 +62,7 @@ class KiloReleaseInstaller(private val context: Context) {
 
     private fun nativeAssetName(): String = when (Build.SUPPORTED_ABIS.firstOrNull()) {
         "x86_64" -> "kilo-linux-x64-musl.tar.gz"
-        "arm64-v8a" -> "kilo-linux-aarch64-musl.tar.gz"
+        "arm64-v8a" -> "kilo-linux-arm64-musl.tar.gz"
         else -> throw IOException("Unsupported Android ABI for Kilo CLI: ${Build.SUPPORTED_ABIS.joinToString()}")
     }
 
