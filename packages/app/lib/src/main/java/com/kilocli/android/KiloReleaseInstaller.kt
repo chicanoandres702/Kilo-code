@@ -26,8 +26,23 @@ class KiloReleaseInstaller(private val context: Context) {
             onStatus?.invoke("Extracting Kilo release binary...")
             extractBinary(archive, target)
             if (!target.isFile || target.length() == 0L) throw IOException("Extracted Kilo binary is empty: ${target.absolutePath}")
-            if (!target.setReadable(true, false) || !target.setExecutable(true, false)) throw IOException("Unable to set executable permissions on Kilo binary: ${target.absolutePath}")
-            try { Os.chmod(target.absolutePath, 0x1C0) } catch (_: Exception) {}
+
+            // Ensure readable/writable/executable by owner (700)
+            target.setReadable(true, true)
+            target.setWritable(true, true)
+            target.setExecutable(true, true)
+
+            // Force chmod for robust permission application on Android
+            try {
+                Os.chmod(target.absolutePath, 0x1C0) // 0700
+            } catch (e: Exception) {
+                // Log or handle chmod failure if necessary, but don't fail the install
+            }
+
+            // Verification: Check if we can actually execute it (a dry run)
+            if (!target.canExecute()) {
+                throw IOException("Failed to set executable permissions on Kilo binary (target.canExecute() is false): ${target.absolutePath}")
+            }
         } finally {
             archive.delete()
         }
