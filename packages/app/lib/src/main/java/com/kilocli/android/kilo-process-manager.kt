@@ -1,9 +1,9 @@
 /*
  * [Parent Feature/Milestone] Kilo Android
  * [Child Task/Issue] #21
- * [Subtask] Store launcher and native binary in app-specific storage
+ * [Subtask] Keep native binary executable in app-private storage
  * [Upstream] KiloTermux -> [Downstream] Android Process API
- * [Law Check] 82 lines | Passed Do It Check
+ * [Law Check] 88 lines | Passed Do It Check
  */
 
 package com.kilocli.android
@@ -74,9 +74,17 @@ class KiloProcessManager(private val context: Context) {
         fun nativeFile(context: Context): File = File(nativeDirectory(context), "kilo")
 
         private fun launcherDirectory(context: Context): File = context.kiloStorageDirectory("launcher")
-        private fun nativeDirectory(context: Context): File = context.kiloStorageDirectory("native")
+        private fun nativeDirectory(context: Context): File = context.internalKiloDirectory("native")
 
-        private fun Context.kiloStorageDirectory(name: String): File =
-            (getExternalFilesDir(name) ?: File(File(filesDir, "kilo"), name)).apply { mkdirs() }
+        private fun Context.kiloStorageDirectory(name: String): File {
+            val external = getExternalFilesDir(name)
+            if (external != null && external.canWrite()) {
+                if (external.mkdirs() || external.isDirectory) return external
+            }
+            return internalKiloDirectory(name)
+        }
+
+        private fun Context.internalKiloDirectory(name: String): File =
+            File(File(filesDir, "kilo"), name).apply { mkdirs() }
     }
 }

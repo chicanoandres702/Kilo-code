@@ -36,7 +36,7 @@ class KiloTermux(private val context: Context) {
             installKiloBinary(hasNodeLauncher, onStatus)
             null
         } catch (e: Exception) {
-            e.message ?: "Unable to install Kilo CLI"
+            "Unable to install Kilo CLI: ${e.message ?: "unknown error"}"
         }
         null
     }
