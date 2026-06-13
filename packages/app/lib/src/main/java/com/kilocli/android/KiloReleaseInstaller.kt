@@ -60,10 +60,14 @@ class KiloReleaseInstaller(private val context: Context) {
 
     private fun latestNativeAssetUrl(): String = "https://github.com/Kilo-Org/kilocode/releases/latest/download/${nativeAssetName()}"
 
-    private fun nativeAssetName(): String = when (Build.SUPPORTED_ABIS.firstOrNull()) {
-        "x86_64" -> "kilo-linux-x64-musl.tar.gz"
-        "arm64-v8a" -> "kilo-linux-arm64-musl.tar.gz"
-        else -> throw IOException("Unsupported Android ABI for Kilo CLI: ${Build.SUPPORTED_ABIS.joinToString()}")
+    private fun nativeAssetName(): String {
+        val abi = Build.SUPPORTED_ABIS.firstOrNull() ?: "unknown"
+        return when (abi) {
+            "x86_64" -> "kilo-linux-x64-musl.tar.gz"
+            "arm64-v8a" -> "kilo-linux-arm64.tar.gz" // Use non-musl version as safer fallback
+            "armeabi-v7a" -> "kilo-linux-armhf.tar.gz"
+            else -> throw IOException("Unsupported Android ABI for Kilo CLI: $abi")
+        }
     }
 
     private fun HttpURLConnection.checkStatus(action: String) {
