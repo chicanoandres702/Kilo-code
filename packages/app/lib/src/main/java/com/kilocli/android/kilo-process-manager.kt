@@ -12,9 +12,14 @@ import java.io.File
 import java.io.IOException
 
 class KiloProcessManager(private val context: Context) {
-    private val binaryFile = File(context.filesDir, "kilo")
+    private fun getBinaryFile(): File {
+        val filesDirBinary = File(context.filesDir, "kilo")
+        if (filesDirBinary.exists()) return filesDirBinary
+        return File(context.cacheDir, "kilo")
+    }
 
     fun runCommand(cmd: String, args: List<String> = emptyList()): CommandResult {
+        val binaryFile = getBinaryFile()
         if (!isBinaryInstalled()) {
             return CommandResult("", "Kilo binary is missing at ${binaryFile.absolutePath}. Initialize KiloTermux before running commands.", 1)
         }
@@ -35,6 +40,7 @@ class KiloProcessManager(private val context: Context) {
 
     // New method for long-running processes (like servers)
     fun startProcess(cmd: String, args: List<String> = emptyList()): Process {
+        val binaryFile = getBinaryFile()
         if (!isBinaryInstalled()) {
             throw IOException("Kilo binary is missing at ${binaryFile.absolutePath}")
         }
@@ -45,5 +51,8 @@ class KiloProcessManager(private val context: Context) {
             .start()
     }
 
-    fun isBinaryInstalled(): Boolean = binaryFile.isFile && binaryFile.canRead() && binaryFile.canExecute() && binaryFile.length() > 0
+    fun isBinaryInstalled(): Boolean {
+        val binaryFile = getBinaryFile()
+        return binaryFile.isFile && binaryFile.canRead() && binaryFile.canExecute() && binaryFile.length() > 0
+    }
 }

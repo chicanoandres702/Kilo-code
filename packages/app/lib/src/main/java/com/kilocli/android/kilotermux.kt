@@ -48,13 +48,29 @@ class KiloTermux(private val context: Context) {
 
     private fun installKiloBinary() {
         val assetName = resolveAssetName()
-        context.assets.open(assetName).use { input ->
-            val binary = File(context.filesDir, "kilo")
-            binary.outputStream().use { output -> input.copyTo(output) }
-            binary.setExecutable(true, false)
+        // Attempt installation in filesDir first (default)
+        val binary = File(context.filesDir, "kilo")
 
-            if (!processManager.isBinaryInstalled()) {
-                throw IOException("Installed Kilo binary is not executable: ${binary.absolutePath}")
+        try {
+            installTo(assetName, binary)
+        } catch (e: IOException) {
+            // Fallback to cacheDir if filesDir fails
+            val fallback = File(context.cacheDir, "kilo")
+            installTo(assetName, fallback)
+        }
+    }
+
+    private fun installTo(assetName: String, destination: File) {
+        context.assets.open(assetName).use { input ->
+            destination.outputStream().use { output -> input.copyTo(output) }
+
+            // Explicitly set executable
+            if (!destination.setExecutable(true, false)) {
+                throw IOException("Unable to set executable permissions: ${destination.absolutePath}. Filesystem might be noexec.")
+            }
+
+            if (!destination.canExecute()) {
+                throw IOException("Binary not executable after chmod: ${destination.absolutePath}")
             }
         }
     }
