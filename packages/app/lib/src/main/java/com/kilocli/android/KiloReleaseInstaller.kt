@@ -25,6 +25,7 @@ class KiloReleaseInstaller(private val context: Context) {
             downloadLatestArchive(archive)
             onStatus?.invoke("Extracting Kilo release binary...")
             extractBinary(archive, target)
+            if (!target.isFile || target.length() == 0L) throw IOException("Extracted Kilo binary is empty: ${target.absolutePath}")
             if (!target.setReadable(true, false) || !target.setExecutable(true, false)) throw IOException("Unable to set executable permissions on Kilo binary: ${target.absolutePath}")
             try { Os.chmod(target.absolutePath, 0x1C0) } catch (_: Exception) {}
         } finally {
