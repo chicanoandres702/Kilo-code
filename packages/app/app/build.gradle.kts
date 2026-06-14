@@ -44,5 +44,5 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.6.2")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("com.termux:terminal-view:0.118.0")
+    implementation("com.github.Termux:terminal-view:v0.119.0-beta.3")
 }
