@@ -25,6 +25,7 @@ import com.kilocli.android.KiloTermux
 import com.kilocli.android.SettingsState
 import com.demonstratorz.kilocode.KiloChatScreen
 import com.demonstratorz.kilocode.FileExplorer
+import com.demonstratorz.kilocode.TerminalScreen
 
 class MainActivity : ComponentActivity() {
     private lateinit var kiloTermux: KiloTermux
@@ -73,6 +74,12 @@ fun MainScreen(kiloTermux: KiloTermux) {
                     selected = currentScreen == 2,
                     onClick = { currentScreen = 2 }
                 )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Build, "Terminal") },
+                    label = { Text("Terminal") },
+                    selected = currentScreen == 3,
+                    onClick = { currentScreen = 3 }
+                )
             }
         }
     ) { padding ->
@@ -80,6 +87,7 @@ fun MainScreen(kiloTermux: KiloTermux) {
             0 -> KiloChatScreen(kiloTermux, settingsState, Modifier.padding(padding))
             1 -> FileExplorer(kiloTermux, Modifier.padding(padding))
             2 -> SettingsScreen(settingsState, Modifier.padding(padding))
+            3 -> TerminalScreen(Modifier.padding(padding))
         }
     }
 }
